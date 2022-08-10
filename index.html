@@ -1,0 +1,39 @@
+<html>
+    <head>
+        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/graphdracula/1.2.1/dracula.min.js"></script>
+        <!--<script type="text/javascript" src="dracula.dev.js"></script>-->
+        <link rel="stylesheet" href="style.css">
+    </head>
+
+    <body>
+        <div style="display: flex;">
+            <div style="display: flex; flex-direction: column; flex-grow: 1; margin-right: 10px;">
+                <textarea id="rdfInput" style="flex-grow: 22; resize: none; margin-bottom: 10px;">
+@prefix :       <lib-part#> .
+@prefix people: <people-part#> .
+
+people-part.ttl lib:title           "Document describing some people"
+
+people:po       people:name(u)      "Paul Otlet"
+                people:made         lib:cdb
+                people:workplace    people:iid
+
+people:tn       people:name         "Theodor Holm Nelson"
+                people:made         lib:cl(u)
+                people:test         people:po
+                </textarea>
+                <div style="display: flex; flex-grow: 1; justify-content: right; margin-bottom: 10px;">
+                    <input id="buttonCopyLatex" type="button" value="Copy LaTeX" onclick="copyLatex();" style="margin-left: 5px; width: 15%;" disabled="true">
+                    <input id="buttonCreateLatex" type="button" value="Generate LaTeX" onclick="createLatex();" style="margin-left: 5px; width: 15%;" disabled="true">
+                    <input id="buttonCreateGraph" type="button" value="Create graph" onclick="createGraph();" style="margin-left: 5px; width: 15%;">
+                </div>
+                <textarea id="latexOutput" style="flex-grow: 5; resize: none;">LaTeX Code will be displayed here ...</textarea>
+            </div>
+            <div id="canvas" style="width: 500px; height: 725px; background-color: white;"></div>
+        </div>
+
+        <script type="text/javascript" src="code.js"></script>
+    </body>
+</html>
