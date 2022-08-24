@@ -2,53 +2,62 @@ var canvasWidth = 500;
 var canvasHeight = 725;
 var graph;
 
-//TODO: Kreis für Blank Nodes
-
 var rectangle = function(r, n) {
-    var label = r.text(0, 30, n.label)
+    var label = r.text(0, 30, n.label);
     var shape = r.rect(-3*n.label.length, 20, 6*n.label.length, 20)
                  .attr({ "fill": "#FFFFFF" })
-                 .attr({ "fill-opacity": 0 })
+                 .attr({ "fill-opacity": 0 });
     
-    var set = r.set()
-    .push(shape, label)
+    var set = r.set().push(shape, label);
 
-    if (n.label.slice(n.label.length - 3) == "(u)") {
-        label.attr("font-size", "0")
-        shape.attr("stroke-width", "0")
+    if (n.label.slice(n.label.length - 8) == "(hidden)") {
+        label.attr("font-size", "0");
+        shape.attr("stroke-width", "0");
     }
 
-    return set
+    return set;
 }
 
 var ellipse = function(r, n) {
     var label = r.text(0, 30, n.label);
     var shape = r.ellipse(0, 30, 3*n.label.length, 10)
                  .attr({ "fill": "#FFFFFF" })
-                 .attr({ "fill-opacity": 0 })
+                 .attr({ "fill-opacity": 0 });
     
-    var set = r.set().push(shape, label)
+    var set = r.set().push(shape, label);
 
-    if (n.label.slice(n.label.length - 3) == "(u)") {
-        label.attr("font-size", "0")
-        shape.attr("stroke-width", "0")
+    if (n.label.slice(n.label.length - 8) == "(hidden)") {
+        label.attr("font-size", "0");
+        shape.attr("stroke-width", "0");
     }
     
-    return set
+    return set;
+}
+
+var blank = function(r, n) {
+    var label = r.text(0, 30, n.label);
+    var shape = r.ellipse(0, 30, 3*n.label.length, 10)
+                 .attr({ "fill": "#FFFFFF" })
+                 .attr({ "fill-opacity": 0 });
+    
+    var set = r.set().push(shape, label);
+    label.attr("font-size", "0");
+
+    if (n.label.slice(n.label.length - 8) == "(hidden)") {
+        shape.attr("stroke-width", "0");
+    }
+    
+    return set;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 function createGraph() {
-    document.getElementById("buttonCreateGraph").value = "Update graph";
-    document.getElementById("buttonCreateLatex").value = "Generate LaTeX";
-    document.getElementById("buttonCreateLatex").disabled = false;
-    document.getElementById("buttonCopyLatex").disabled = true;
-    document.getElementById("latexOutput").value = "LaTeX Code will be displayed here ...";
-
-    graph = new Dracula.Graph();
     var lines = readInput();
-
+    graph = new Dracula.Graph();
+    
+    updateButtonsAndTextfieldsGraph();
+    checkTurtle(document.getElementById("rdfInput").value.replaceAll('(hidden)',''))
     createNodesandEdges(lines);
 
     var layouter = new Dracula.Layout.Spring(graph);
@@ -57,7 +66,7 @@ function createGraph() {
     graph.edges.forEach((e) => {
         e.style['label-style'] = {'fill-opacity': '1'};
 
-        if (e.style.label.slice(e.style.label.length - 3) == "(u)") {
+        if (e.style.label.slice(e.style.label.length - 8) == "(hidden)") {
             e.style.label = "";
             e.style.stroke = "black; 'stroke-width': 0;";
         }
@@ -69,9 +78,28 @@ function createGraph() {
     renderer.draw();
 }
 
+function updateButtonsAndTextfieldsGraph() {
+    document.getElementById("buttonCreateGraph").value = "Update graph";
+    document.getElementById("buttonCreateLatex").value = "Generate LaTeX";
+    document.getElementById("buttonCreateLatex").disabled = false;
+    document.getElementById("buttonCopyLatex").style.display = "none";
+    document.getElementById("latexOutput").value = "LaTeX Code will be displayed here ...";
+    document.getElementById("errorOutput").value = "Errors will be displayed here ...";
+}
+
+function checkTurtle(turtle) {
+    var parser = new N3.Parser();
+
+    parser.parse(turtle, (error, quad, prefixes) => {
+        if (error) {
+            document.getElementById("errorOutput").value = "Turtle error:\n" + error.message.replace(" quad", " triple") + "\n\nCreated graph and LaTeX might not be correct!";
+        }
+    });
+}
+
 function readInput() {
     var turtle = document.getElementById("rdfInput").value;
-    return turtle.split('\n');
+    return turtle.split('\n').map(string => string.slice(0, -1));
 }
 
 function createNodesandEdges(lines) {
@@ -79,33 +107,79 @@ function createNodesandEdges(lines) {
 
     for(var i = 0; i < lines.length; i++){
         if (lines[i].trim().length != 0 && lines[i].slice(0, 7) != "@prefix") {
-            var [firstNodeTemp, edgeTemp, ...secondNodeTemp] = lines[i].split(/\s+/);
-            secondNodeTemp = secondNodeTemp.join(" ")
+            var [firstNodeTemp, edgeTemp, ...objectNodes] = lines[i].split(/\s+/);
+            objectNodes = formatObjectNodes(objectNodes);
 
-            if (firstNodeTemp.trim().length != 0) {
-                firstNode = firstNodeTemp;
+            for (var secondNodeTemp of objectNodes) {
+                if (firstNodeTemp.trim().length != 0) {
+                    firstNode = firstNodeTemp;
+                }
+
+                if (edgeTemp.trim().length != 0) {
+                    edge = edgeTemp;
+                }
+
+                if (secondNodeTemp.trim().length != 0) {
+                    secondNode = secondNodeTemp;
+                }
+
+                graph.addNode(firstNode, getNodeParameters(firstNode));
+                graph.addNode(secondNode, getNodeParameters(secondNode));
+                graph.addEdge(firstNode, secondNode, { label: edge, directed: true });
             }
-
-            if (edgeTemp.trim().length != 0) {
-                edge = edgeTemp;
-            }
-
-            if (secondNodeTemp.trim().length != 0) {
-                secondNode = secondNodeTemp;
-            }
-
-            graph.addNode(firstNode, { label: firstNode, render: firstNode.slice(0, 1) == "\"" ? rectangle : ellipse })
-            graph.addNode(secondNode, { label: secondNode, render: secondNode.slice(0, 1) == "\"" ? rectangle : ellipse })
-            graph.addEdge(firstNode, secondNode, { label: edge, directed: true });
         }
     }
+}
+
+function formatObjectNodes(objectNodes) {
+    var partOfString = false;
+    var nodes = [];
+
+    for (var node of objectNodes) {
+        if (node.slice(-1) == ",") {
+            node = node.slice(0, -1); 
+        }
+
+        if (partOfString) {
+            if (node.slice(-1) == "\"" || node.slice(-9) == "\"(hidden)") {
+                partOfString = false;
+            }
+
+            nodes[nodes.length - 1] = nodes[nodes.length - 1].concat(" ", node);
+        } else {
+            if (node.slice(0, 1) == "\"") {
+                partOfString = true;
+            }
+
+            nodes.push(node);
+        }
+    }
+
+    return nodes;
+}
+
+function getNodeParameters(text) {
+    if (text.slice(0, 2) == "_:") {
+        return { label: text, render: blank };
+    } else if (checkIfIsLiteral(text)) {
+        return { label: text, render: rectangle };
+    } else {
+        return { label: text, render: ellipse };
+    }
+}
+
+function checkIfIsLiteral(text) {
+    if (text.match('true|false|(".*")')) {
+        return true;
+    }
+
+    return !isNaN(parseFloat(text)) && isFinite(text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 function createLatex() {
-    document.getElementById("buttonCopyLatex").disabled = false;
-    document.getElementById("buttonCreateLatex").value = "Update LaTeX";
+    updateButtonsLatex();
 
     var latexStart = `\\begin{tikzpicture}[remember picture,overlay,shift=(current page.north west)]
     \\begin{scope}[x={(current page.north east)},y={(current page.south west)}]
@@ -113,18 +187,22 @@ function createLatex() {
 
     var latexNodes = "";
     var latexEdges = "";
+    var graphTop = 1;
+    var graphBottom = 0;
 
     for (const [key, value] of Object.entries(graph.nodes)) {
         var newNode = `
         \\node[` 
         + (value.shape["0"].type == "rect" ? "rectangle" : "ellipse") + `, ` 
-        + (key.slice(key.length - 3) == "(u)" ? "draw=none" : "draw") + `, minimum height=0.9cm, anchor=north west] (`
-        + key.replace(/[^0-9a-z]/gi, '') + `) at (` 
+        + (key.slice(key.length - 8) == "(hidden)" ? "draw=none" : "draw") + `, minimum height=0.9cm, anchor=north west] (`
+        + key.replace(/[^0-9a-z]/gi, "") + `) at (` 
         + (value.shape["0"].getBBox().x / canvasWidth).toFixed(4) + `,` 
         + (value.shape["0"].getBBox().y / canvasHeight).toFixed(4) + ` + \\value{yShift} / 100) {` 
-        + (key.slice(key.length - 3) == "(u)" ? "\\phantom{" + key + "}" : key) + `};`;
+        + ((key.slice(key.length - 8) == "(hidden)") || (key.slice(0, 2) == "_:") ? "\\phantom{" + key.replace("_", "") + "}" : key.replace("_", "")) + `};`;
 
         latexNodes = latexNodes.concat(newNode);
+        graphTop = Math.min(graphTop, value.shape["0"].getBBox().y / canvasHeight);
+        graphBottom = Math.max(graphBottom, value.shape["0"].getBBox().y / canvasHeight);
     }
 
     for (const [key, value] of Object.entries(graph.edges)) {
@@ -141,12 +219,19 @@ function createLatex() {
             latexEdges = latexEdges.concat(newEdge);
         }
     }
-        
+    
     var latexEnd = `
     \\end{scope}
-\\end{tikzpicture}`;
+\\end{tikzpicture}
+
+\\vspace{` + Math.round((graphBottom - graphTop + 40 / canvasHeight) * 297) + `mm}`;
 
     document.getElementById("latexOutput").value = latexStart + latexNodes + latexEdges + latexEnd;
+}
+
+function updateButtonsLatex() {
+    document.getElementById("buttonCopyLatex").style.display = "block";
+    document.getElementById("buttonCreateLatex").value = "Update LaTeX";
 }
 
 function getDirection(node, path) {
