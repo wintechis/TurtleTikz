@@ -1,7 +1,24 @@
+/**
+ * Width of the canvas on which the graph is drawn
+ */
 var canvasWidth = 500;
+
+/**
+ * Height of the canvas on which the graph is drawn
+ */
 var canvasHeight = 725;
+
+/**
+ * Dracula Graph object
+ */
 var graph;
 
+/**
+ * Rectangular node shape
+ * @param {*} r 
+ * @param {*} n 
+ * @returns 
+ */
 var rectangle = function(r, n) {
     var label = r.text(0, 30, n.label);
     var shape = r.rect(-3*n.label.length, 20, 6*n.label.length, 20)
@@ -18,6 +35,12 @@ var rectangle = function(r, n) {
     return set;
 }
 
+/**
+ * Elliptical node shape
+ * @param {*} r 
+ * @param {*} n 
+ * @returns 
+ */
 var ellipse = function(r, n) {
     var label = r.text(0, 30, n.label);
     var shape = r.ellipse(0, 30, 3*n.label.length, 10)
@@ -34,6 +57,12 @@ var ellipse = function(r, n) {
     return set;
 }
 
+/**
+ * Blank node shape
+ * @param {*} r 
+ * @param {*} n 
+ * @returns 
+ */
 var blank = function(r, n) {
     var label = r.text(0, 30, n.label);
     var shape = r.ellipse(0, 30, 3*n.label.length, 10)
@@ -52,11 +81,14 @@ var blank = function(r, n) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Creates nodes and edges and renders the graph on the canvas
+ */
 function createGraph() {
     var lines = readInput();
     graph = new Dracula.Graph();
     
-    updateButtonsAndTextfieldsGraph();
+    updateButtonsAndTextareasGraph();
     checkTurtle(document.getElementById("rdfInput").value.replaceAll('(hidden)',''))
     createNodesandEdges(lines);
 
@@ -78,30 +110,47 @@ function createGraph() {
     renderer.draw();
 }
 
-function updateButtonsAndTextfieldsGraph() {
+/**
+ * Updates the states of the buttons and resets the textareas when a new graph is created
+ */
+function updateButtonsAndTextareasGraph() {
     document.getElementById("buttonCreateGraph").value = "Update graph";
     document.getElementById("buttonCreateLatex").value = "Generate LaTeX";
     document.getElementById("buttonCreateLatex").disabled = false;
     document.getElementById("buttonCopyLatex").style.display = "none";
+    document.getElementById("errorOutput").style.display = "none";
     document.getElementById("latexOutput").value = "LaTeX Code will be displayed here ...";
-    document.getElementById("errorOutput").value = "Errors will be displayed here ...";
+    document.getElementById("latexOutput").readOnly = "true";
 }
 
+/**
+ * Checks if the entered turtle syntax is correct (Turtle verlinken)
+ * @param {string} turtle Text entered in the textarea
+ */
 function checkTurtle(turtle) {
     var parser = new N3.Parser();
 
     parser.parse(turtle, (error, quad, prefixes) => {
         if (error) {
             document.getElementById("errorOutput").value = "Turtle error:\n" + error.message.replace(" quad", " triple") + "\n\nCreated graph and LaTeX might not be correct!";
+            document.getElementById("errorOutput").style.display = "block";
         }
     });
 }
 
+/**
+ * Reads the input in the textarea and transforms it into an array
+ * @returns {array} Array where each element represents a line of the textarea
+ */
 function readInput() {
     var turtle = document.getElementById("rdfInput").value;
     return turtle.split('\n').map(string => string.slice(0, -1));
 }
 
+/**
+ * Transforms the input in the textarea into nodes and edges and adds them to the graph
+ * @param {array} lines Lines of the textarea
+ */
 function createNodesandEdges(lines) {
     var firstNode, edge, secondNode = "";
 
@@ -131,6 +180,11 @@ function createNodesandEdges(lines) {
     }
 }
 
+/**
+ * Seperates the object nodes correctly, especially joins string type literals together
+ * @param {string} objectNodes Part of the input that belongs to the object nodes
+ * @returns {array} Object nodes seperated correctly
+ */
 function formatObjectNodes(objectNodes) {
     var partOfString = false;
     var nodes = [];
@@ -147,7 +201,7 @@ function formatObjectNodes(objectNodes) {
 
             nodes[nodes.length - 1] = nodes[nodes.length - 1].concat(" ", node);
         } else {
-            if (node.slice(0, 1) == "\"") {
+            if (node.slice(0, 1) == "\"" && node.slice(-1) != "\"") {
                 partOfString = true;
             }
 
@@ -158,6 +212,11 @@ function formatObjectNodes(objectNodes) {
     return nodes;
 }
 
+/**
+ * Formats the parameters of the node and return them with the correct shape
+ * @param {string} text Text of a node
+ * @returns {json} Json formatted parameters
+ */
 function getNodeParameters(text) {
     if (text.slice(0, 2) == "_:") {
         return { label: text, render: blank };
@@ -168,6 +227,11 @@ function getNodeParameters(text) {
     }
 }
 
+/**
+ * Determines if an object node is a literal or not
+ * @param {string} text Text of an object node
+ * @returns {boolean}
+ */
 function checkIfIsLiteral(text) {
     if (text.match('true|false|(".*")')) {
         return true;
@@ -178,8 +242,11 @@ function checkIfIsLiteral(text) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Creates the latex of the graph and displays the result
+ */
 function createLatex() {
-    updateButtonsLatex();
+    updateButtonsAndTextareasLatex();
 
     var latexStart = `\\begin{tikzpicture}[remember picture,overlay,shift=(current page.north west)]
     \\begin{scope}[x={(current page.north east)},y={(current page.south west)}]
@@ -229,11 +296,21 @@ function createLatex() {
     document.getElementById("latexOutput").value = latexStart + latexNodes + latexEdges + latexEnd;
 }
 
-function updateButtonsLatex() {
+/**
+ * Updates the states of the buttons and makes the latex textarea editable when the latex is created
+ */
+function updateButtonsAndTextareasLatex() {
     document.getElementById("buttonCopyLatex").style.display = "block";
     document.getElementById("buttonCreateLatex").value = "Update LaTeX";
+    document.getElementById("latexOutput").removeAttribute('readonly');
 }
 
+/**
+ * Find the correct direction of the node for the edge
+ * @param {node} node Node object of graph
+ * @param {path} path Path object of graph
+ * @returns {number} Degree where the edge needs to bind
+ */
 function getDirection(node, path) {
     if (Math.abs(path[1] - node.shape["0"].getBBox().x) < 10) {
         return "180";
@@ -252,6 +329,9 @@ function getDirection(node, path) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Copies the latex to the clipboard
+ */
 function copyLatex() {
     var textarea = document.getElementById("latexOutput");
     textarea.select();

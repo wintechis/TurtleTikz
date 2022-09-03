@@ -1,6 +1,5 @@
 <html>
     <head>
-        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js"></script>
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/graphdracula/1.2.1/dracula.min.js"></script>
         <script type="text/javascript" src="https://unpkg.com/n3/browser/n3.min.js"></script>
@@ -39,8 +38,8 @@ people:tn       people:name         "Theodor Holm Nelson";
                     <input id="buttonCreateGraph" type="button" value="Create graph" onclick="createGraph();" style="margin-left: 5px; width: 15%;">
                 </div>
                 <div style="display: flex; flex-direction: row; flex-grow: 5; overflow: hidden; position: relative;">
-                    <textarea id="errorOutput" style="flex-grow: 1; resize: none; margin-right: 5px;">Errors will be displayed here ...</textarea>
-                    <textarea id="latexOutput" style="flex-grow: 1; resize: none; margin-left: 5px;">LaTeX Code will be displayed here ...</textarea>
+                    <textarea readonly id="errorOutput" style="flex-grow: 1; resize: none; margin-right: 10px; color: red; display: none;"></textarea>
+                    <textarea readonly id="latexOutput" style="flex-grow: 1; resize: none;">LaTeX Code will be displayed here ...</textarea>
                     <input id="buttonCopyLatex" type="button" value="Copy LaTeX" onclick="copyLatex();" style="position: absolute; right: 30px; bottom: 10px; height: 20%; width: 10%; display: none">
                 </div>
             </div>
