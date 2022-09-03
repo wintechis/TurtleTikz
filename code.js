@@ -124,7 +124,7 @@ function updateButtonsAndTextareasGraph() {
 }
 
 /**
- * Checks if the entered turtle syntax is correct (Turtle verlinken)
+ * Checks if the entered turtle syntax is correct (https://www.w3.org/TR/turtle/)
  * @param {string} turtle Text entered in the textarea
  */
 function checkTurtle(turtle) {
