@@ -2,7 +2,7 @@
 A tool to convert an RDF Turtle to a graph that can be used in a LaTeX project.
 
 ## Installation
-Save the files index.html, code.js and style.css to a local folder on your computer. Then just open (double click) the index.html file. The tool will open in your browser (Chrome or Edge are recommended).
+Save the files index.html, code.js and style.css to a local folder on your computer. Then just open (double click) the index.html file. The tool will open in your browser (Chrome or Edge are recommended). To run the tool an internet connection is required.
 
 ## User Guide
 ### 1. Enter RDF Turtle
