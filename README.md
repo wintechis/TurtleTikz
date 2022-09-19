@@ -14,6 +14,15 @@ Click "Generate LaTeX" to generate the LaTeX code. The code will match the previ
 ### 4. Copy LaTeX to your Project
 Click "Copy LaTeX" to copy the code to the clipboard and paste it to your project. If the previous set position of the graph doesn't fit you can use the counter "yShift" to move all nodes and edges up or down (100 represents the full height). Vertical space for the graph is added automatically.
 
+<ins>The following packages need to be imported:</ins>\
+\usepackage{tikz}\
+\usetikzlibrary{shapes.geometric}\
+\usetikzlibrary{arrows.meta}\
+
+<ins>When using the Exam Template the following lines of code need to be added:</ins>\
+\usepackage{etoolbox}\
+\AtBeginEnvironment{tikzpicture}{\shorthandoff{"}}{}{}\
+
 ---
 Chair of Information Systems, especially Technical Information Systems https://www.ti.rw.fau.de/
 
