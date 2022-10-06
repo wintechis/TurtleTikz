@@ -24,7 +24,7 @@ Click "Copy LaTeX" to copy the code to the clipboard and paste it to your projec
 \AtBeginEnvironment{tikzpicture}{\shorthandoff{"}}{}{}\
 
 ## Code Documentation
-Codie Documentation is hosted [here](http://wintechis.github.io/TurtleTikz/).
+Code Documentation is hosted [here](http://wintechis.github.io/TurtleTikz/).
 
 
 ---
